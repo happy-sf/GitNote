@@ -33,12 +33,57 @@ class UpdateThread(QThread):
         global movieStatus
         main.setGitEnv()
         repo = git.Repo(main.gitNoteNoteHome)
-        remote = repo.remote()
-        repo.git.add('--all')
-        repo.index.commit('note')
-        remote.push()
-        remote.pull()
-        movieStatus = True
+        try:
+            # 尝试获取远程仓库，如果不存在则跳过
+            remote = repo.remote('origin')
+            repo.git.add('--all')
+            if repo.is_dirty(untracked_files=True):
+                repo.index.commit('note')
+            
+            # 获取当前分支名
+            current_branch = repo.active_branch.name
+            
+            # 确保远程仓库配置正确
+            try:
+                # 检查 fetch refspec
+                fetch_config = repo.git.config('--get', f'remote.origin.fetch')
+                if not fetch_config:
+                    # 设置默认的 fetch refspec
+                    repo.git.config('--add', 'remote.origin.fetch', '+refs/heads/*:refs/remotes/origin/*')
+            except:
+                pass
+            
+            # 先获取远程更新
+            try:
+                remote.fetch()
+            except:
+                pass
+            
+            # 推送更改
+            try:
+                # 尝试推送
+                remote.push(f'{current_branch}:{current_branch}')
+            except Exception as push_error:
+                # 如果推送失败，尝试设置上游分支
+                try:
+                    repo.git.push('--set-upstream', 'origin', current_branch)
+                except:
+                    # 如果仍然失败，使用强制推送
+                    try:
+                        remote.push(f'+{current_branch}:{current_branch}')
+                    except:
+                        print(f"推送失败，但已保存到本地")
+            
+            # 尝试合并更新（如果有冲突则跳过）
+            try:
+                remote.pull()
+            except:
+                pass
+                
+        except Exception as e:
+            print(f"Git同步失败: {e}")
+        finally:
+            movieStatus = True
         #main.myGitNote.setUpdateBack()
 
 class GitNote(QWidget, GitNoteUi.Ui_Form_note):
@@ -110,6 +155,125 @@ class GitNote(QWidget, GitNoteUi.Ui_Form_note):
         convertmenu = QMenu()
         convertmenu.addAction("另存为pdf文件", self.viewToPdf)
         self.toolButton_functions.setMenu(convertmenu)
+        # 设置按钮样式
+        self.setButtonStyles()
+    
+    def setButtonStyles(self):
+        """设置按钮的样式，包括颜色、大小和悬停效果"""
+        # 保存原有图标
+        update_icon = self.pushButton_update.icon()
+        save_icon = self.pushButton_save.icon()
+        addpic_icon = self.pushButton_addpicture.icon()
+        config_icon = self.toolButton_config.icon()
+        functions_icon = self.toolButton_functions.icon()
+        
+        # 通用按钮样式
+        common_style = """
+        QPushButton {
+            border: 2px solid #8f8f91;
+            border-radius: 8px;
+            padding: 5px;
+            min-width: 40px;
+            min-height: 40px;
+            background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #f6f7fa, stop:1 #dadbde);
+        }
+        QPushButton:hover {
+            background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #ffffff, stop:1 #e6e6e6);
+            border-color: #0066cc;
+        }
+        QPushButton:pressed {
+            background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #dadbde, stop:1 #f6f7fa);
+        }
+        """
+        
+        # 更新按钮 - 蓝色系
+        update_style = common_style + """
+        QPushButton {
+            background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #4da6ff, stop:1 #0066cc);
+            border-color: #0052a3;
+        }
+        QPushButton:hover {
+            background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #66b3ff, stop:1 #0073e6);
+        }
+        """
+        
+        # 保存按钮 - 绿色系
+        save_style = common_style + """
+        QPushButton {
+            background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #5cb85c, stop:0 #449d44);
+            border-color: #398439;
+        }
+        QPushButton:hover {
+            background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #6fc86c, stop:1 #4cae4c);
+        }
+        """
+        
+        # 添加图片按钮 - 橙色系
+        addpic_style = common_style + """
+        QPushButton {
+            background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #f0ad4e, stop:1 #ec971f);
+            border-color: #d58512;
+        }
+        QPushButton:hover {
+            background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #f2c690, stop:1 #eea236);
+        }
+        """
+        
+        # 工具按钮样式
+        tool_style = """
+        QToolButton {
+            border: 2px solid #8f8f91;
+            border-radius: 8px;
+            padding: 5px;
+            min-width: 40px;
+            min-height: 40px;
+            background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #f6f7fa, stop:1 #dadbde);
+        }
+        QToolButton:hover {
+            background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #ffffff, stop:1 #e6e6e6);
+            border-color: #0066cc;
+        }
+        QToolButton::menu-button {
+            border: none;
+            width: 15px;
+        }
+        """
+        
+        # 配置按钮 - 灰色系
+        config_style = tool_style + """
+        QToolButton {
+            background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #9e9e9e, stop:1 #616161);
+            border-color: #424242;
+        }
+        QToolButton:hover {
+            background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #bdbdbd, stop:1 #757575);
+        }
+        """
+        
+        # 功能按钮 - 紫色系
+        functions_style = tool_style + """
+        QToolButton {
+            background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #ba68c8, stop:1 #8e24aa);
+            border-color: #6a1b9a;
+        }
+        QToolButton:hover {
+            background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #ce93d8, stop:1 #ab47bc);
+        }
+        """
+        
+        # 应用样式
+        self.pushButton_update.setStyleSheet(update_style)
+        self.pushButton_save.setStyleSheet(save_style)
+        self.pushButton_addpicture.setStyleSheet(addpic_style)
+        self.toolButton_config.setStyleSheet(config_style)
+        self.toolButton_functions.setStyleSheet(functions_style)
+        
+        # 恢复图标
+        self.pushButton_update.setIcon(update_icon)
+        self.pushButton_save.setIcon(save_icon)
+        self.pushButton_addpicture.setIcon(addpic_icon)
+        self.toolButton_config.setIcon(config_icon)
+        self.toolButton_functions.setIcon(functions_icon)
     
     def viewToPdf(self):
         if not self.pushButton_save.isEnabled() and not self.pushButton_addpicture.isEnabled():
@@ -488,8 +652,14 @@ class GitNote(QWidget, GitNoteUi.Ui_Form_note):
         self.showTextDir = self.listfileDir
         #self.textEdit_show.setText(markdown2.markdown(self.showRealPictures(self.viewTexts)))
         #self.textEdit_show.setHtml(markdown2.markdown(self.showRealPictures(self.viewTexts)))
-        markdown = mistune.Markdown()
+        # 使用 mistune 的 HTML 渲染器
+        markdown = mistune.create_markdown(renderer=mistune.HTMLRenderer())
         markdownTxt = markdown(self.showRealPictures(self.viewTexts))
+        
+        # 确保 markdownTxt 是字符串
+        if not isinstance(markdownTxt, str):
+            markdownTxt = str(markdownTxt)
+        
         markdownTxt = markdownTxt.replace("\n<", "$&$&$&").strip()
         markdownTxt = markdownTxt.replace("\n", r"<br>")
         markdownTxt = markdownTxt.replace("$&$&$&", "\n<")
@@ -521,8 +691,14 @@ class GitNote(QWidget, GitNoteUi.Ui_Form_note):
         #self.textEdit_show.setHtml(markdown2.markdown(therealmd))
         #renderer = HighlightRenderer()
         #markdown = mistune.Markdown(renderer=renderer)
-        markdown = mistune.Markdown()
+        # 使用 mistune 的 HTML 渲染器
+        markdown = mistune.create_markdown(renderer=mistune.HTMLRenderer())
         markdownTxt = markdown(self.showRealPictures(self.viewTexts))
+        
+        # 确保 markdownTxt 是字符串
+        if not isinstance(markdownTxt, str):
+            markdownTxt = str(markdownTxt)
+        
         markdownTxt = markdownTxt.replace("\n<", "$&$&$&").strip()
         markdownTxt = markdownTxt.replace("\n", r"<br>")
         markdownTxt = markdownTxt.replace("$&$&$&", "\n<")

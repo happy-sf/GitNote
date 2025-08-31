@@ -22,6 +22,9 @@
   <layout class="QVBoxLayout" name="verticalLayout_2">
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,1,0">
+     <property name="spacing">
+      <number>10</number>
+     </property>
      <item>
       <widget class="QPushButton" name="pushButton_update">
        <property name="text">
@@ -29,8 +32,8 @@
        </property>
        <property name="iconSize">
         <size>
-         <width>16</width>
-         <height>16</height>
+         <width>32</width>
+         <height>32</height>
         </size>
        </property>
       </widget>
@@ -82,12 +85,6 @@
          <height>0</height>
         </size>
        </property>
-       <property name="maximumSize">
-        <size>
-         <width>200</width>
-         <height>16777215</height>
-        </size>
-       </property>
        <property name="sizeIncrement">
         <size>
          <width>0</width>
@@ -117,12 +114,6 @@
         <size>
          <width>10</width>
          <height>0</height>
-        </size>
-       </property>
-       <property name="maximumSize">
-        <size>
-         <width>150</width>
-         <height>16777215</height>
         </size>
        </property>
        <property name="contextMenuPolicy">
@@ -158,6 +149,9 @@
       <layout class="QVBoxLayout" name="verticalLayout">
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_3">
+         <property name="spacing">
+          <number>10</number>
+         </property>
          <item>
           <widget class="QPushButton" name="pushButton_save">
            <property name="text">
@@ -165,8 +159,8 @@
            </property>
            <property name="iconSize">
             <size>
-             <width>20</width>
-             <height>20</height>
+             <width>32</width>
+             <height>32</height>
             </size>
            </property>
           </widget>
@@ -185,8 +179,8 @@
            </property>
            <property name="iconSize">
             <size>
-             <width>20</width>
-             <height>20</height>
+             <width>32</width>
+             <height>32</height>
             </size>
            </property>
           </widget>
@@ -198,8 +192,8 @@
            </property>
            <property name="iconSize">
             <size>
-             <width>20</width>
-             <height>20</height>
+             <width>32</width>
+             <height>32</height>
             </size>
            </property>
            <property name="popupMode">
