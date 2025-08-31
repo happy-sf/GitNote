@@ -100,7 +100,6 @@ def main():
     print("- 双击笔记可以编辑")
     print("- 编辑后点击绿色保存按钮保存")
     print("- 可以拖拽左侧分割线调整宽度")
-    print("\n如需配置Git同步，请运行：python3 setup_git.py")
     
     sys.exit(app.exec_())
 
