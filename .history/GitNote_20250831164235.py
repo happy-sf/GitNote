@@ -778,10 +778,10 @@ class GitNote(QWidget, GitNoteUi.Ui_Form_note):
         if total_width > 0:
             # 左侧 splitter (目录树 + 笔记列表) 占 25%
             # 右侧编辑区 占 75%
-            self.splitter.setSizes([int(total_width * 0.5), int(total_width * 0.5)])
+            self.splitter.setSizes([int(total_width * 0.25), int(total_width * 0.75)])
             # 左侧内部：目录树占 50%，笔记列表占 50%
             left_width = int(total_width * 0.25)
-            self.splitter_2.setSizes([int(left_width * 0.5), int(left_width * 0.5)])
+            self.splitter_2.setSizes([int(left_width * 0.7), int(left_width * 0.3)])
     
     def mycloneGit(self):
         if not main.gitExist:
