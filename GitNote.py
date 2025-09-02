@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-from PyQt5.QtWidgets import QWidget, QApplication, QMainWindow, QTreeWidgetItem, QListWidgetItem, QMenu, QInputDialog, QMessageBox, QFileDialog, QToolButton, QFontDialog, QColorDialog
+from PyQt5.QtWidgets import QWidget, QApplication, QMainWindow, QTreeWidgetItem, QListWidgetItem, QMenu, QInputDialog, QMessageBox, QFileDialog, QToolButton, QFontDialog, QColorDialog, QScrollBar
 from PyQt5.QtGui import QIcon, QColor, QBrush, QPalette, QColor, QFontMetricsF, QPixmap, QMovie, QTextCursor, QFont
 from PyQt5.QtCore import Qt, QByteArray, QThread, QTimer, QSize
 import GitNoteUi
@@ -118,6 +118,10 @@ class GitNote(QWidget, GitNoteUi.Ui_Form_note):
         self.pushButton_save.clicked.connect(self.clickedButtonSave)
         self.plainTextEdit_markdown.textChanged.connect(self.textChangedEdit)
         self.pushButton_save.setEnabled(False)
+        
+        # 同步滚动设置
+        self.sync_scroll_enabled = True
+        self.setupSyncScroll()
         self.updateListView(self.listfileDir)
         self.newDirName = ""
         self.pushButton_addpicture.setEnabled(False)
@@ -147,6 +151,8 @@ class GitNote(QWidget, GitNoteUi.Ui_Form_note):
         toolmenu.addAction("设置字体", self.setFont)
         toolmenu.addAction("默认主题", self.whiteTheme)
         toolmenu.addAction("暗黑主题", self.blackTheme)
+        toolmenu.addSeparator()
+        toolmenu.addAction("同步滚动", self.toggleSyncScroll)
         self.toolButton_config.setMenu(toolmenu)
         self.toolButton_config.setPopupMode(QToolButton.MenuButtonPopup)
         # 转换
@@ -274,6 +280,58 @@ class GitNote(QWidget, GitNoteUi.Ui_Form_note):
         self.pushButton_addpicture.setIcon(addpic_icon)
         self.toolButton_config.setIcon(config_icon)
         self.toolButton_functions.setIcon(functions_icon)
+    
+    def setupSyncScroll(self):
+        """设置同步滚动功能"""
+        # 编辑器滚动时同步预览窗口
+        self.plainTextEdit_markdown.verticalScrollBar().valueChanged.connect(self.onEditorScroll)
+        # 预览窗口滚动时同步编辑器
+        self.textEdit_show.verticalScrollBar().valueChanged.connect(self.onPreviewScroll)
+        
+        # 防止循环触发
+        self._syncing = False
+    
+    def onEditorScroll(self, value):
+        """编辑器滚动时同步预览窗口"""
+        if not self.sync_scroll_enabled or self._syncing:
+            return
+            
+        self._syncing = True
+        
+        # 计算滚动比例
+        editor_scroll = self.plainTextEdit_markdown.verticalScrollBar()
+        preview_scroll = self.textEdit_show.verticalScrollBar()
+        
+        if editor_scroll.maximum() > 0:
+            ratio = value / editor_scroll.maximum()
+            preview_value = int(ratio * preview_scroll.maximum())
+            preview_scroll.setValue(preview_value)
+        
+        self._syncing = False
+    
+    def onPreviewScroll(self, value):
+        """预览窗口滚动时同步编辑器"""
+        if not self.sync_scroll_enabled or self._syncing:
+            return
+            
+        self._syncing = True
+        
+        # 计算滚动比例
+        editor_scroll = self.plainTextEdit_markdown.verticalScrollBar()
+        preview_scroll = self.textEdit_show.verticalScrollBar()
+        
+        if preview_scroll.maximum() > 0:
+            ratio = value / preview_scroll.maximum()
+            editor_value = int(ratio * editor_scroll.maximum())
+            editor_scroll.setValue(editor_value)
+        
+        self._syncing = False
+    
+    def toggleSyncScroll(self):
+        """切换同步滚动状态"""
+        self.sync_scroll_enabled = not self.sync_scroll_enabled
+        status = "启用" if self.sync_scroll_enabled else "禁用"
+        QMessageBox.information(self, "同步滚动", f"同步滚动已{status}", QMessageBox.Yes)
     
     def viewToPdf(self):
         if not self.pushButton_save.isEnabled() and not self.pushButton_addpicture.isEnabled():
